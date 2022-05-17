@@ -1,0 +1,307 @@
+#include <iostream>
+#include <cstdlib>
+#include <random>
+#include <algorithm>
+#include <iterator>
+#include <vector>
+#include <ctime>
+#include <time.h>
+#include <bits/stdc++.h>
+using namespace std;
+
+
+class binarySearchTree{
+	private:
+		struct node{
+			double key;
+			node* right;
+			node* left;
+		};
+		node* root;
+		void removeRootMatch(){
+			if(root != NULL){
+				node* delPtr = root;
+				int rootKey = root->key;
+				int smallestInRightSubTree;
+				//case 0, root has no children
+				if(root->left == NULL && root->right == NULL){
+					root = NULL;
+					delete delPtr;
+				}
+				//case 1, root node has 1 child
+				else if(root->left == NULL && root->right != NULL){
+					root = root->right;
+					delPtr->right = NULL;
+					delete delPtr;
+					cout << "the root node is deleted\n";
+				}
+				else if(root->left != NULL && root->right == NULL){
+					root = root->left;
+					delPtr->left = NULL;
+					delete delPtr;
+					cout << "the root node has been deleted\n";
+				}
+				//case 2. root has 2 children
+				else{
+					smallestInRightSubTree = findSmallestPrivate(root->right);
+					removeNodePrivate(smallestInRightSubTree, root);
+					root->key = smallestInRightSubTree;
+					cout << "the chosen node to be deleted was the root\n";
+					cout << "i moved the smallest right node to occupy the root now\n";
+					cout << "as it will now be following the node rules for left and right\n";
+					cout << "the root key is now containting the smalling root in the right\n";
+				}
+			}
+			else{
+				cout << "can not remove the root. tree empty\n";
+			}
+		}
+		void removeNodePrivate(int key, node* parent){
+			if(root != NULL){
+				//does the root node contain the match
+				if(root->key == key){
+					removeRootMatch();
+				}
+				else{
+					if(key < parent->key && parent->left != NULL){
+						parent->left->key == key ?
+						removeMatch(parent, parent->left, true) :
+						removeNodePrivate(key, parent->left);
+					}
+					else if(key > parent->key && parent->right != NULL){
+						parent->right->key == key ?
+						removeMatch(parent, parent->right, true) :
+						removeNodePrivate(key, parent->right);
+					}
+					else{
+						//key we are looking for isnt inthe tree
+						cout << "key aint in the tree \n";
+					}
+				}
+			}
+			else{
+				cout << "nuttin in the tree\n";
+			}
+		}
+		void addLeafPrivate(double key, node* Ptr){
+			if(root == NULL){
+				root = createLeaf(key);
+			}
+			else if(key < Ptr->key){
+				if(Ptr->left != NULL){
+					addLeafPrivate(key, Ptr->left);
+				}
+				else{
+					Ptr->left = createLeaf(key);
+				}
+			}
+			else if(key > Ptr->key){
+				if(Ptr->right != NULL){
+					addLeafPrivate(key, Ptr->right);
+				}
+				else{
+					Ptr->right = createLeaf(key);	
+				}
+			}
+			else{
+				cout << "the key " << key << " has already been added to the tree\n";
+			}
+		}
+		void printInOrderPrivate(node* Ptr){
+			if(root != NULL){
+				if(Ptr->left != NULL){
+					printInOrderPrivate(Ptr->left);
+				}
+				cout << Ptr->key << " ";
+				if(Ptr->right != NULL){
+					printInOrderPrivate(Ptr->right);
+				}
+			}
+			else{
+				cout << "the tree is empty homie\n";
+			}
+		}
+		node* returnNodePrivate(int key, node* Ptr){
+			if(Ptr != NULL){
+				if(Ptr->key == key){
+					return Ptr;
+				}
+				else{
+					if(key < Ptr->key){
+						return returnNodePrivate(key, Ptr->left);
+					}
+					else{
+						return returnNodePrivate(key, Ptr->right);
+					}
+				}
+			}
+			else{
+				return NULL;
+			}
+		}
+		int findSmallestPrivate(node* Ptr){
+			if(root == NULL){
+				cout << "the tree is empty homie\n";
+				return -1000;
+			}
+			else{
+				if(Ptr->left != NULL){
+					return findSmallestPrivate(Ptr->left);
+					//we dont need to traverse the right side
+					//since all nodes with children on the right side
+					//are greater than the parent node, will also be bigger
+				}
+				else{
+					//found the smallest key in the subtree
+					return Ptr->key;
+				}
+			}
+		}
+		void removeMatch(node* parent, node* match, bool left){
+			if(root != NULL){
+				node* delPtr;
+				int matchKey = match->key;
+				int smallestInRightSubTree;
+				//case 0, match has no children
+				if(match->left == NULL && match->right == NULL){
+					delPtr = match;
+					left = true ? parent->left = NULL : parent->right = NULL;
+					delete delPtr;
+					cout << "the node has been eliminated\n";
+				}
+				//case 1, 1 child
+				else if(match->left == NULL && match->right != NULL){
+					left = true ? parent->left = match->right : parent->right = match->right;
+					match->right = NULL;
+					delPtr = match;
+					delete delPtr;
+				}
+				else if(match->left != NULL && match->right == NULL){
+					left = true ? parent->left = match->left : parent->right = match->left;
+					match->left = NULL;
+					delPtr = match;
+					delete delPtr;
+				}
+				//case 2
+				else{
+					smallestInRightSubTree = findSmallestPrivate(match->right);
+					removeNodePrivate(smallestInRightSubTree, match);
+					match->key = smallestInRightSubTree;
+				}
+			}
+			else{
+				cout << "cant remove match, tree is empty\n";
+			}
+		}
+		
+		
+		
+	public:
+		binarySearchTree(){
+			root = NULL;
+		}
+		node* createLeaf(double key){
+			node *n = new node;
+			n->key = key;
+			n->left = NULL;
+			n->right = NULL;	
+		}
+		void addLeaf(double key){
+			addLeafPrivate(key, root);
+		}
+		void printInOrder(){
+			printInOrderPrivate(root);
+		}
+		node* returnNode(int key){
+			//my search function
+			//returns a pointer than points to the node pointing
+			//to the key
+			return returnNodePrivate(key, root);
+		}
+		int returnRootKey(){
+			if(root != NULL){
+				return root->key;
+			}
+			else{
+				return -1000;
+			}
+		}
+		void printChildren(int key){
+			node* Ptr = returnNode(key);
+			if(Ptr != NULL){
+				cout << "Parent Node = " << Ptr->key << endl;
+				Ptr->left == NULL ? 
+				cout << "left child = NULL\n" :
+				cout << "left child = " << Ptr->left->key << endl; 
+				Ptr->right == NULL ? 
+				cout << "right child = NULL\n" :
+				cout << "right child = "<< Ptr->right->key << endl; 
+			}
+			else{
+				cout << "Key " << key << " cant be found\n";
+			}
+		}
+		int findSmallest(){
+			return findSmallestPrivate(root);
+		}
+		void removeNode(int key){
+			removeNodePrivate(key, root);
+		}
+		
+};
+int main(){
+	
+	//how many nodes will be in the tree
+	//with their respective values as their index
+	
+	binarySearchTree myTree;
+	int numOfNodes;
+	int choice = 0;
+	srand(time(NULL));
+	cout << "(this is for the randomly generated inputs from 100-100k)\n";
+	cout << "(i manually added a random function)\n";
+	cout << "How many Nodes will the tree have?" << endl;
+	cout << "(the tree will be filled with randomly generated numbers\n";
+	cout << "from 0 - the number of nodes you entered)\n";
+	cin >> numOfNodes;
+	int treeKeys[numOfNodes];
+	cout << "[BELOW IS REPORT]\n";
+	cout << "Printing out Repeating values...\n";
+	for(int i = 0; i < numOfNodes;i++){
+		double num = rand() % numOfNodes + 1;
+		treeKeys[i] = num;
+		myTree.addLeaf(treeKeys[i]);
+	}
+	//cout << "printing the tree in order after adding numbers\n";
+	//myTree.printInOrder();
+	cout << "\n";
+	cout << "number of nodes = " << numOfNodes << "\n";
+	cout << "Enter a key value to delete. Enter -1 to stop the process\n";
+	while(choice != -1){
+		cout << "Delete Node: ";
+		cin >> choice;
+		if(choice != -1){
+			
+			myTree.removeNode(choice);
+			//myTree.printInOrder();
+			cout << endl;
+		}
+	}
+	int print;
+	cout << "Press '1' to see the final tree in left favored manner\n";
+	cout << "Press '2' to exit\n";
+	cin >> print;
+	if(print == 1){
+	myTree.printInOrder();
+	}
+	else if(print == 2){
+		cout << "exiting...\n";
+	}
+	else{
+		cout << "alrighty you didnt listen to instructions i see\n";
+		cout << "how about i just exit for you\n";
+	}
+	cout << "\n";
+		
+	return 0;
+}
